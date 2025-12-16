@@ -9,6 +9,32 @@ interface StoryModeProps {
   onAddPoints: (points: number) => void;
 }
 
+// Helper for robust sentence splitting
+const splitTextToSentences = (text: string): string[] => {
+  // Try Intl.Segmenter (Modern Browsers) - best for handling "Mr.", quotes, etc.
+  if (typeof Intl !== 'undefined' && 'Segmenter' in Intl) {
+     // Cast to any to avoid TS errors if lib target is old
+     const segmenter = new (Intl as any).Segmenter('en', { granularity: 'sentence' });
+     return Array.from(segmenter.segment(text))
+        .map((s: any) => s.segment.trim())
+        .filter((s: string) => s.length > 0);
+  }
+  
+  // Fallback: Split preserving delimiters so no text is lost.
+  // Matches punctuation [.!?] followed optionally by quotes/parens ['"”’)], followed by whitespace/EOF
+  const parts = text.split(/([.!?]+['"”’)]?(?:\s+|$))/);
+  const result: string[] = [];
+  
+  for (let i = 0; i < parts.length; i += 2) {
+     const part = parts[i];
+     const delim = parts[i+1] || '';
+     const full = (part + delim).trim();
+     if (full) result.push(full);
+  }
+  
+  return result;
+};
+
 // Custom Friendly Brown Owl Icon
 const OwlIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg 
@@ -93,7 +119,7 @@ const StoryMode: React.FC<StoryModeProps> = ({ story, onFinish, onAddPoints }) =
 
   // Split content into sentences for highlighting
   const sentences = useMemo(() => {
-    return story.content.match(/[^.!?]+[.!?]+(\s|$)/g)?.filter(s => s.trim().length > 0) || [story.content];
+    return splitTextToSentences(story.content);
   }, [story.content]);
 
   // Initial Prefetch on Mount
@@ -507,8 +533,8 @@ const StoryMode: React.FC<StoryModeProps> = ({ story, onFinish, onAddPoints }) =
   if (step === 'read') {
     return (
       <div className="space-y-6 pb-24 relative">
-        <div className="flex justify-between items-start">
-             <h2 className="text-3xl font-bold font-english text-blue-700">{story.title}</h2>
+        <div className="flex justify-between items-start" dir="ltr">
+             <h2 className="text-3xl font-bold font-english text-blue-700 text-left">{story.title}</h2>
         </div>
         
         {/* Story Text with Highlighting */}
