@@ -1,7 +1,8 @@
-import { GoogleGenAI, Type, Modality, LiveServerMessage } from "@google/genai";
+import { GoogleGenAI, Modality, LiveServerMessage } from "@google/genai";
 import { StoryData } from "../types";
 
 // Helper to get client with current key
+// Always instantiate new client to capture any updates to process.env.API_KEY
 const getAiClient = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 // Helper to decode raw PCM data into an AudioBuffer
@@ -140,7 +141,7 @@ export const generateSpeech = async (text: string, retryCount = 0): Promise<Arra
 export const checkReading = async (audioBase64: string, mimeType: string, originalText: string): Promise<string> => {
   const ai = getAiClient();
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash", // Changed from native-audio-preview to flash for better REST support
+    model: "gemini-2.5-flash", 
     contents: {
       parts: [
         {
@@ -172,7 +173,7 @@ export const translateSpokenWord = async (audioBase64: string, mimeType: string)
     const ai = getAiClient();
     try {
         const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash", // Changed from native-audio-preview to flash
+        model: "gemini-2.5-flash", 
         contents: {
             parts: [
             {
@@ -208,6 +209,7 @@ export const generateVeoVideo = async (imageB64: string, prompt: string): Promis
      }
   }
   
+  // Re-initialize to ensure key is picked up
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   let operation = await ai.models.generateVideos({
