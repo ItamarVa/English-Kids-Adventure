@@ -20,6 +20,16 @@
         transform: scale(0.95);
       }
     </style>
+    <!-- Polyfill for process.env to prevent ReferenceError crash in browser -->
+    <script>
+      if (typeof process === "undefined") {
+        window.process = {
+          env: {
+            API_KEY: "" // Will be populated by build tool or manual override
+          }
+        };
+      }
+    </script>
   <script type="importmap">
 {
   "imports": {
